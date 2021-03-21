@@ -4,6 +4,7 @@ import org.threeten.bp.OffsetDateTime
 
 data class DailyForecast(
     val time: OffsetDateTime,
+    val condition: Condition,
     val description: String,
     val iconId: String,
     val minTemperature: Temperature,

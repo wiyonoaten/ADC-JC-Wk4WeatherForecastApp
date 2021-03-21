@@ -23,19 +23,22 @@ val gray400 = Color(0xFF2F2E62)
 val gray600 = Color(0xFF303061)
 val gray800 = Color(0xFF232634)
 
-val blue200 = Color(0xFF5AC8FA)
-val blue400 = Color(0xFF88D9FC)
+val blue200 = Color(0xFF5AE6FF)
+val blue400 = Color(0xFF5ACBFA)
 
 val cloudy200 = Color(0xFF6DFAE5)
 val cloudy400 = Color(0xFF72EFED)
-val cloudy600 = Color(0xFF95F6F5)
 
 val sunny200 = Color(0xFFFAE177)
 val sunny400 = Color(0xFFFFBE94)
-val sunny600 = Color(0xFFFFCCA5)
 
-val thunder200 = Color(0xFF5AE6FF)
+val foggy200 = Color(0xFFE2D7B7)
+val foggy400 = Color(0xFF9FA081)
+
+val snowy200 = Color(0xFFF9FAFC)
+val snowy400 = Color(0xFFB7C2CE)
+
+val thunder200 = Color(0xFF5AE3FE)
 val thunder400 = Color(0xFF5ACBFA)
-val thunder600 = Color(0xFF88D9FC)
 
 val amber200 = Color(0xFFF7C412)

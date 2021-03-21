@@ -17,6 +17,7 @@ package com.wiyonoaten.composechallenge.wk4weatherforecastapp
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.views.MainActivity
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
