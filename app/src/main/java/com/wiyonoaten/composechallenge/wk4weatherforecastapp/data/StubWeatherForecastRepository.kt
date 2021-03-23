@@ -113,39 +113,39 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             hourly = listOf(
                                 HourlyForecast(
                                     time = 1616403600L.epochToOffsetDateTime(),
-                                    iconId = IconId.BrokenClouds,
-                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                                    iconId = IconId.ShowerRain,
+                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 62.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616414400L.epochToOffsetDateTime(),
-                                    iconId = IconId.FewClouds,
-                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
+                                    iconId = IconId.Rain,
+                                    temperature = Temperature(29.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 75.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616425200L.epochToOffsetDateTime(),
-                                    iconId = IconId.ClearSky,
-                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
+                                    iconId = IconId.ScatteredClouds,
+                                    temperature = Temperature(28.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 55.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616436000L.epochToOffsetDateTime(),
-                                    iconId = IconId.Mist,
-                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 45.5f
+                                    iconId = IconId.ShowerRain,
+                                    temperature = Temperature(25.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 65.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616446800L.epochToOffsetDateTime(),
-                                    iconId = IconId.ShowerRain,
-                                    temperature = Temperature(29.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 68.0f
+                                    iconId = IconId.FewClouds,
+                                    temperature = Temperature(27.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 48.0f
                                 ),
                                 HourlyForecast(
                                     time = 1616457600L.epochToOffsetDateTime(),
                                     iconId = IconId.Rain,
-                                    temperature = Temperature(26.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 62.5f
+                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 82.5f
                                 )
                             )
                         ),
@@ -162,39 +162,39 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             hourly = listOf(
                                 HourlyForecast(
                                     time = 1616403600L.epochToOffsetDateTime(),
-                                    iconId = IconId.BrokenClouds,
-                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 62.5f
+                                    iconId = IconId.ClearSky,
+                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 12.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616414400L.epochToOffsetDateTime(),
                                     iconId = IconId.FewClouds,
                                     temperature = Temperature(31.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 75.5f
+                                    chanceOfRain = 25.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616425200L.epochToOffsetDateTime(),
                                     iconId = IconId.ClearSky,
-                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 55.5f
+                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 15.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616436000L.epochToOffsetDateTime(),
-                                    iconId = IconId.Mist,
-                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 45.5f
+                                    iconId = IconId.ScatteredClouds,
+                                    temperature = Temperature(35.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 35.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616446800L.epochToOffsetDateTime(),
-                                    iconId = IconId.ShowerRain,
-                                    temperature = Temperature(29.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 68.0f
+                                    iconId = IconId.ClearSky,
+                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 28.0f
                                 ),
                                 HourlyForecast(
                                     time = 1616457600L.epochToOffsetDateTime(),
-                                    iconId = IconId.Rain,
-                                    temperature = Temperature(26.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 62.5f
+                                    iconId = IconId.FewClouds,
+                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 32.5f
                                 )
                             )
                         ),
@@ -211,38 +211,38 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             hourly = listOf(
                                 HourlyForecast(
                                     time = 1616403600L.epochToOffsetDateTime(),
-                                    iconId = IconId.BrokenClouds,
-                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 62.5f
+                                    iconId = IconId.Thunderstorm,
+                                    temperature = Temperature(29.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 82.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616414400L.epochToOffsetDateTime(),
-                                    iconId = IconId.FewClouds,
-                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
+                                    iconId = IconId.Rain,
+                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 75.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616425200L.epochToOffsetDateTime(),
-                                    iconId = IconId.ClearSky,
+                                    iconId = IconId.ScatteredClouds,
                                     temperature = Temperature(31.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 55.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616436000L.epochToOffsetDateTime(),
-                                    iconId = IconId.Mist,
-                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 45.5f
+                                    iconId = IconId.Thunderstorm,
+                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 85.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616446800L.epochToOffsetDateTime(),
-                                    iconId = IconId.ShowerRain,
-                                    temperature = Temperature(29.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 68.0f
+                                    iconId = IconId.FewClouds,
+                                    temperature = Temperature(35.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 48.0f
                                 ),
                                 HourlyForecast(
                                     time = 1616457600L.epochToOffsetDateTime(),
                                     iconId = IconId.Rain,
-                                    temperature = Temperature(26.0f, TemperatureUnit.Celcius),
+                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 62.5f
                                 )
                             )
@@ -260,39 +260,39 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             hourly = listOf(
                                 HourlyForecast(
                                     time = 1616403600L.epochToOffsetDateTime(),
-                                    iconId = IconId.BrokenClouds,
-                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 62.5f
+                                    iconId = IconId.Mist,
+                                    temperature = Temperature(28.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 52.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616414400L.epochToOffsetDateTime(),
-                                    iconId = IconId.FewClouds,
-                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 75.5f
+                                    iconId = IconId.BrokenClouds,
+                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 65.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616425200L.epochToOffsetDateTime(),
-                                    iconId = IconId.ClearSky,
-                                    temperature = Temperature(31.0f, TemperatureUnit.Celcius),
+                                    iconId = IconId.ScatteredClouds,
+                                    temperature = Temperature(32.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 55.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616436000L.epochToOffsetDateTime(),
                                     iconId = IconId.Mist,
-                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
+                                    temperature = Temperature(35.0f, TemperatureUnit.Celcius),
                                     chanceOfRain = 45.5f
                                 ),
                                 HourlyForecast(
                                     time = 1616446800L.epochToOffsetDateTime(),
-                                    iconId = IconId.ShowerRain,
-                                    temperature = Temperature(29.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 68.0f
+                                    iconId = IconId.Mist,
+                                    temperature = Temperature(30.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 48.0f
                                 ),
                                 HourlyForecast(
                                     time = 1616457600L.epochToOffsetDateTime(),
-                                    iconId = IconId.Rain,
-                                    temperature = Temperature(26.0f, TemperatureUnit.Celcius),
-                                    chanceOfRain = 62.5f
+                                    iconId = IconId.ScatteredClouds,
+                                    temperature = Temperature(28.0f, TemperatureUnit.Celcius),
+                                    chanceOfRain = 42.5f
                                 )
                             )
                         )
