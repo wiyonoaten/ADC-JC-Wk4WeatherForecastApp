@@ -6,7 +6,7 @@ data class CurrentForecast(
     val time: OffsetDateTime,
     val condition: Condition,
     val description: String,
-    val iconId: String,
+    val iconId: IconId,
     val temperature: Temperature,
     val windSpeed: WindSpeed,
     val chanceOfRain: Float

@@ -4,7 +4,7 @@ import org.threeten.bp.OffsetDateTime
 
 data class HourlyForecast(
     val time: OffsetDateTime,
-    val iconId: String,
+    val iconId: IconId,
     val temperature: Temperature,
     val chanceOfRain: Float
 )
