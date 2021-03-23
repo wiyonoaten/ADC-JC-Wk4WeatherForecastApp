@@ -364,27 +364,21 @@ private fun ForecastView(
             .rememberLayoutSize {
                 containerWidth = it.width
             }
-            .alpha(swipeableState.offset.value.let { swipeOffset ->
-                if (swipeOffset.isNaN()) 1.0f else 1.0f - swipeOffset.absoluteValue / containerWidth
-                    .toFloat()
-                    .div(2f)
-            })
+            .alpha(
+                swipeableState.offset.value.let { swipeOffset ->
+                    if (swipeOffset.isNaN()) 1.0f else 1.0f - swipeOffset.absoluteValue / containerWidth
+                        .toFloat()
+                        .div(2f)
+                }
+            )
             .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
             .swipeable(
                 swipeableState,
                 enabled = isSwipingEnabled,
                 anchors = mutableMapOf<Float, Int>().apply {
-                    put(
-                        containerWidth
-                            .toFloat()
-                            .div(2f), -1
-                    )
+                    put(containerWidth.toFloat().div(2f), -1)
                     put(0f, 0)
-                    put(
-                        -containerWidth
-                            .toFloat()
-                            .div(2f), 1
-                    )
+                    put(-containerWidth.toFloat().div(2f), 1)
                 },
                 orientation = Orientation.Horizontal,
                 thresholds = { _, _ -> FractionalThreshold(0.3f) }
@@ -497,9 +491,13 @@ private fun DatesPanel(
 
     val coroutineScope = rememberCoroutineScope()
 
-    val itemWidths = remember { mutableStateListOf(*Array(availableForecastDates.size) {
-        if (isInTestingMode) 100 else 0
-    }) }
+    val itemWidths = remember {
+        mutableStateListOf(
+            *Array(availableForecastDates.size) {
+                if (isInTestingMode) 100 else 0
+            }
+        )
+    }
 
     val scrollState = rememberScrollState()
 
@@ -556,9 +554,7 @@ private fun DatesPanel(
                     style = MaterialTheme.typography.h6,
                     modifier = Modifier.alpha(if (selectedDateIndex == index) 1.0f else 0.5f)
                 )
-                Spacer(modifier = Modifier.size(
-                    if (index < availableForecastDates.size - 1) 40.dp else 16.dp
-                ))
+                Spacer(modifier = Modifier.size(if (index < availableForecastDates.size - 1) 40.dp else 16.dp))
             }
         }
     }
