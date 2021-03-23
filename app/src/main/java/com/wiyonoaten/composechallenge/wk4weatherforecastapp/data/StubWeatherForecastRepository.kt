@@ -107,7 +107,7 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             iconId = IconId.ShowerRain,
                             minTemperature = Temperature(10.0f, TemperatureUnit.Celcius),
                             maxTemperature = Temperature(35.0f, TemperatureUnit.Celcius),
-                            mainTemperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                            mainTemperature = Temperature(31.0f, TemperatureUnit.Celcius),
                             windSpeed = WindSpeed(8.0f, SpeedUnit.KilometresPerHour, 8.0f),
                             chanceOfRain = 0.47f,
                             hourly = listOf(
@@ -156,7 +156,7 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             iconId = IconId.ClearSky,
                             minTemperature = Temperature(10.0f, TemperatureUnit.Celcius),
                             maxTemperature = Temperature(35.0f, TemperatureUnit.Celcius),
-                            mainTemperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                            mainTemperature = Temperature(30.0f, TemperatureUnit.Celcius),
                             windSpeed = WindSpeed(8.0f, SpeedUnit.KilometresPerHour, 8.0f),
                             chanceOfRain = 0.47f,
                             hourly = listOf(
@@ -205,7 +205,7 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             iconId = IconId.Thunderstorm,
                             minTemperature = Temperature(10.0f, TemperatureUnit.Celcius),
                             maxTemperature = Temperature(35.0f, TemperatureUnit.Celcius),
-                            mainTemperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                            mainTemperature = Temperature(29.0f, TemperatureUnit.Celcius),
                             windSpeed = WindSpeed(8.0f, SpeedUnit.KilometresPerHour, 8.0f),
                             chanceOfRain = 0.47f,
                             hourly = listOf(
@@ -254,7 +254,7 @@ class StubWeatherForecastRepository : IWeatherForecastRepository {
                             iconId = IconId.Mist,
                             minTemperature = Temperature(10.0f, TemperatureUnit.Celcius),
                             maxTemperature = Temperature(35.0f, TemperatureUnit.Celcius),
-                            mainTemperature = Temperature(32.0f, TemperatureUnit.Celcius),
+                            mainTemperature = Temperature(28.0f, TemperatureUnit.Celcius),
                             windSpeed = WindSpeed(8.0f, SpeedUnit.KilometresPerHour, 8.0f),
                             chanceOfRain = 0.47f,
                             hourly = listOf(
