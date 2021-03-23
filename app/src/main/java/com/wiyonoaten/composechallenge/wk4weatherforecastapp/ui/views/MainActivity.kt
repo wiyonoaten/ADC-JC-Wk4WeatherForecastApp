@@ -106,7 +106,6 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.Ho
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.LocationInfo
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.UseCurrentLocation
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
-import dev.chrisbanes.accompanist.insets.navigationBarsHeight
 import dev.chrisbanes.accompanist.insets.statusBarsHeight
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -392,7 +391,6 @@ private fun ForecastView(
             HourlyForecastPanel(selectedDateIndex, selectedDailyForecast.hourly)
             Spacer(modifier = Modifier.size(32.dp))
             ChanceOfRainPanel(selectedDailyForecast.hourly.take(6), modifier = Modifier.padding(end = 16.dp))
-            Spacer(modifier = Modifier.navigationBarsHeight())
         }
     }
 }

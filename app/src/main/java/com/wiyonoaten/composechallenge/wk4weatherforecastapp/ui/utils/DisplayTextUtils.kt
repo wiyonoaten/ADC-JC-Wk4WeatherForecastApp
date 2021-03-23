@@ -14,7 +14,7 @@ fun Temperature.toFormattedText(system: MeasurementSystem) =
     "${value.roundToInt()} °"
 
 fun WindSpeed.toFormattedText(system: MeasurementSystem) =
-    "$value ${system.windSpeedUnit.toFormattedText()}"
+    "${value.roundToInt()} ${system.windSpeedUnit.toFormattedText()}"
 
 fun SpeedUnit.toFormattedText() = when (this) {
     SpeedUnit.KilometresPerHour -> "km/h"
