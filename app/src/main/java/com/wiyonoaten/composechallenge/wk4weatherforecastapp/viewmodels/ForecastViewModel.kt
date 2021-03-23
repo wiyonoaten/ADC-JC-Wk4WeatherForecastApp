@@ -4,9 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.data.StubWeatherForecastRepository
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.data.WeatherForecastRepositoryImpl
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.DailyForecastInfo
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.FixedLocationInfo
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.UseCurrentLocation
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.LocationInfo
@@ -14,15 +16,20 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.to
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+private const val USE_STUB_DATA = true
+
 class ForecastViewModel(
     private val coroutineScope: CoroutineScope
 ) : ViewModel() {
 
-    private val repository = WeatherForecastRepositoryImpl()
+    private val repository = if (USE_STUB_DATA) StubWeatherForecastRepository() else WeatherForecastRepositoryImpl()
 
     private lateinit var dailyForecasts: List<DailyForecastInfo>
 
     // region States
+
+    var measurementSystem: MeasurementSystem by mutableStateOf(MeasurementSystem.values().first())
+        private set
 
     var isLoading: Boolean by mutableStateOf(false)
         private set
@@ -59,16 +66,27 @@ class ForecastViewModel(
     }
 
     fun onSelectLocation(location: LocationInfo) {
-        TODO()
+        coroutineScope.launch {
+            selectedLocation = location
+            doRefresh()
+        }
     }
 
     fun onSelectAnotherDay(isPreviousDay: Boolean) {
-        TODO()
+        val dateIndexToSelect = if (isPreviousDay) selectedDateIndex - 1 else selectedDateIndex + 1
+
+        check(dateIndexToSelect in dailyForecasts.indices) {
+            "Unexpected error due to date index out of bounds"
+        }
+
+        selectedDailyForecast = dailyForecasts[dateIndexToSelect]
     }
 
     // endregion
 
     init {
+        measurementSystem = MeasurementSystem.Metric
+
         availableLocations = listOf(
             UseCurrentLocation,
             FixedLocationInfo(
@@ -100,8 +118,14 @@ class ForecastViewModel(
 
     private suspend fun doRefresh() {
         isLoading = true
-        dailyForecasts = repository.loadMainForecast().toDailyForecastInfos()
+
+        dailyForecasts = repository.loadMainForecast(selectedLocation.geolocation)
+            .toDailyForecastInfos(measurementSystem)
+
+        availableForecastDates = dailyForecasts.map { it.date }
+
         selectedDailyForecast = dailyForecasts.firstOrNull()
+
         isLoading = false
     }
 }
