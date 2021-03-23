@@ -1,27 +1,36 @@
-# Template repository
+# JC-WeatherForecastApp
 
-Template repository for the Jetpack Compose [#AndroidDevChallenge](https://developer.android.com/dev-challenge).
+![Workflow result](https://github.com/wiyonoaten/ADC-JC-Wk4WeatherForecastApp/workflows/Check/badge.svg)
 
-## Getting started
-Copy this repository by pressing the "Use this template" button in Github.
-Clone your repository and open it in the latest [Android Studio (Canary build)](https://developer.android.com/studio/preview).
 
-## Submission requirements
-- Follow the challenge description on the project website: [developer.android.com/dev-challenge](https://developer.android.com/dev-challenge)
-- All UI should be written using Jetpack Compose
-- The Github Actions workflow should complete successfully
-- Include two screenshots of your submission in the [results](results) folder. The names should be
-  screenshot_1.png and screenshot_2.png.
-- Include a screen record of your submission in the [results](results) folder. The name should be
-  video.mp4
-- Replace the contents of [README.md](README.md) with the contents of [README-template.md](README-template.md) and fill out the template.
+## :scroll: Description
 
-## Code formatting
-The CI uses [Spotless](https://github.com/diffplug/spotless) to check if your code is formatted correctly and contains the right licenses.
-Internally, Spotless uses [ktlint](https://github.com/pinterest/ktlint) to check the formatting of your code.
-To set up ktlint correctly with Android Studio, follow one of the [listed setup options](https://github.com/pinterest/ktlint#-with-intellij-idea).
+This is the single-screen weather forecast app I have done for submission to the Week 4 challenge of the Android Dev Challenge (Jetpack Compose).
 
-Before committing your code, run `./gradlew app:spotlessApply` to automatically format your code.
+## :bulb: Motivation and Context
+
+Highlights include:
+* Simple and visually pleasing immersive design (I hope so!)
+* Using many features/practices of Jetpack Compose such as Theming, CompositionLocal, Preview, MutableState, Modifier, Slots
+* Architecture based on ViewModel, Repository, Coroutines
+* Use of animations and gestures
+* Fully functioning Previews
+* Proper accessibility support
+* Instrumentation testing is covered
+
+Some novelties:
+* Custom integration of DropdownMenu
+* Animated gradient background
+* Swipable screen to switch between views
+* Custom modifier to check measurement
+* Custom implementation of scrollable header
+* Custom rendering using Canvas and graphics
+
+Last but not least, the code has in fact been prepared ready to plug in easily with real data, such as those powered by OpenWeather API. However, I didn't manage to do this by submission, so the app is currently using stub data done at repository level.
+
+## :camera_flash: Screenshots
+<!-- You can add more screenshots here if you like -->
+<img src="/results/screenshot_1.png" width="260">&emsp;<img src="/results/screenshot_2.png" width="260">
 
 ## License
 ```
