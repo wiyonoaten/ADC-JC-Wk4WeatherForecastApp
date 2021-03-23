@@ -17,6 +17,8 @@ package com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.views
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -63,6 +65,7 @@ import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -94,8 +97,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.R
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Condition
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.compositionlocals.LocalRunMode
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.compositionlocals.RunMode
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.modifiers.rememberLayoutSize
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.theme.MyTheme
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.theme.amber200
@@ -105,11 +108,13 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.theme.gray400
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toBackgroundColorGradient
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toDisplayText
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModel
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.IForecastViewModel
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_FORECAST_DATES
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_LOCATIONS
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.makeSampleDailyForecast
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.DailyForecastInfo
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.FixedLocationInfo
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.HourlyForecastInfo
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.LocationInfo
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.UseCurrentLocation
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
 import dev.chrisbanes.accompanist.insets.statusBarsHeight
 import kotlinx.coroutines.launch
@@ -139,9 +144,10 @@ class MainActivity : BaseActivity() {
     }
 }
 
+@VisibleForTesting(otherwise = PRIVATE)
 @Composable
-private fun ActivityScreen(
-    viewModel: ForecastViewModel
+internal fun ActivityScreen(
+    viewModel: IForecastViewModel
 ) {
     with(viewModel) {
         val hasPreviousDayState = remember { derivedStateOf { viewModel.hasPreviousDay } }
@@ -197,7 +203,7 @@ private fun ForecastDashboard(
                 modifier = Modifier
                     .background(Brush.verticalGradient(listOf(backgroundColorTop, backgroundColorBottom)))
             ) {
-                Spacer(modifier = Modifier.statusBarsHeight(32.dp))
+                Spacer(modifier = Modifier.statusBarsHeight(24.dp))
                 LocationSelector(
                     isLoading = isLoading,
                     availableLocations = availableLocations,
@@ -485,9 +491,15 @@ private fun DatesPanel(
     selectedDateIndex: Int,
     modifier: Modifier = Modifier
 ) {
+    // Q for Jetpack team: Why is the use of rememberLayoutSize modifier inside Row here somehow not working, when run
+    // in instrumented test (only), ie. will cause test to hang, seemingly indefinitely waiting on idle.
+    val isInTestingMode = LocalRunMode.current == RunMode.InTesting
+
     val coroutineScope = rememberCoroutineScope()
 
-    val itemWidths = remember { mutableStateListOf(*Array(availableForecastDates.size) { 0 }) }
+    val itemWidths = remember { mutableStateListOf(*Array(availableForecastDates.size) {
+        if (isInTestingMode) 100 else 0
+    }) }
 
     val scrollState = rememberScrollState()
 
@@ -531,9 +543,12 @@ private fun DatesPanel(
         availableForecastDates.forEachIndexed { index, it ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.rememberLayoutSize {
-                    itemWidths[index] = it.width
-                }
+                modifier = Modifier
+                    .run {
+                        if (isInTestingMode) this else {
+                            rememberLayoutSize { itemWidths[index] = it.width }
+                        }
+                    }
             ) {
                 Text(
                     maxLines = 1,
@@ -739,100 +754,27 @@ private fun ChanceOfRainPanel(
 
 @Composable
 private fun ForecastDashboardPreview(isLoading: Boolean = false) {
-    val sanFrancisco = FixedLocationInfo(
-        placeName = "San Francisco",
-        countryCode = "US",
-        geolocation = Geolocation(37.773972f, -122.431297f)
-    )
-
-    var selectedLocation by remember { mutableStateOf<LocationInfo>(sanFrancisco) }
+    var selectedLocation by remember { mutableStateOf(SAMPLE_AVAILABLE_LOCATIONS.first()) }
     var selectedDateIndex by remember { mutableStateOf(0) }
 
     val hasPreviousDayState = remember { derivedStateOf { (selectedDateIndex > 0) } }
     val hasNextDayState = remember { derivedStateOf { (selectedDateIndex < 4) } }
 
-    ForecastDashboard(
-        isLoading = isLoading,
-        availableLocations = listOf(
-            UseCurrentLocation,
-            sanFrancisco,
-        ),
-        selectedLocation = selectedLocation,
-        onSelectLocation = { selectedLocation = it },
-        availableForecastDates = listOf(
-            "Today, 22 Mar",
-            "Mon, 23 Mar",
-            "Tue, 24 Mar",
-            "Wed, 25 Mar",
-            "Thu, 26 Mar",
-        ),
-        selectedDateIndex = selectedDateIndex,
-        selectedDailyForecast = DailyForecastInfo(
-            date = "Today, 22 Mar",
-            condition = when (selectedDateIndex) {
-                0 -> Condition.Clouds
-                1 -> Condition.Clear
-                2 -> Condition.Atmosphere
-                3 -> Condition.Snow
-                else -> Condition.Thunderstorm
-            },
-            description = when (selectedDateIndex) {
-                0 -> "Cloudy"
-                1 -> "Clear sky"
-                2 -> "Haze"
-                3 -> "Light snow shower"
-                else -> "Heavy thunderstorm"
-            },
-            R.drawable.ic_weather_02,
-            minTemperature = "10 °",
-            maxTemperature = "35 °",
-            mainTemperature = "${32 - selectedDateIndex} °",
-            windSpeed = "8 km/h",
-            chanceOfRain = "47 %",
-            hourly = listOf(
-                HourlyForecastInfo(
-                    time = "9 AM",
-                    R.drawable.ic_weather_02,
-                    temperature = "32 °",
-                    chanceOfRainPct = 62.5f
-                ),
-                HourlyForecastInfo(
-                    time = "12 PM",
-                    R.drawable.ic_weather_03,
-                    temperature = "31 °",
-                    chanceOfRainPct = 75.5f
-                ),
-                HourlyForecastInfo(
-                    time = "3 PM",
-                    R.drawable.ic_weather_03,
-                    temperature = "31 °",
-                    chanceOfRainPct = 55.0f
-                ),
-                HourlyForecastInfo(
-                    time = "6 PM",
-                    R.drawable.ic_weather_04,
-                    temperature = "30 °",
-                    chanceOfRainPct = 45.0f
-                ),
-                HourlyForecastInfo(
-                    time = "9 PM",
-                    R.drawable.ic_weather_02,
-                    temperature = "29 °",
-                    chanceOfRainPct = 68.0f
-                ),
-                HourlyForecastInfo(
-                    time = "12 AM",
-                    R.drawable.ic_weather_02,
-                    temperature = "26 °",
-                    chanceOfRainPct = 62.5f
-                )
-            )
-        ),
-        hasPreviousDayState = hasPreviousDayState,
-        hasNextDayState = hasNextDayState,
-        onSelectAnotherDay = { if (it) --selectedDateIndex else ++selectedDateIndex },
-        onRefresh = {}
-    )
+    CompositionLocalProvider(LocalRunMode provides RunMode.InPreview) {
+        ForecastDashboard(
+            isLoading = isLoading,
+            availableLocations = SAMPLE_AVAILABLE_LOCATIONS,
+            selectedLocation = selectedLocation,
+            onSelectLocation = { selectedLocation = it },
+            availableForecastDates = SAMPLE_AVAILABLE_FORECAST_DATES,
+            selectedDateIndex = selectedDateIndex,
+            selectedDailyForecast = makeSampleDailyForecast(selectedDateIndex),
+            hasPreviousDayState = hasPreviousDayState,
+            hasNextDayState = hasNextDayState,
+            onSelectAnotherDay = { if (it) --selectedDateIndex else ++selectedDateIndex },
+            onRefresh = {}
+        )
+    }
 }
 
 @Preview("Light Theme", widthDp = 360, heightDp = 640)

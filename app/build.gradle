@@ -78,7 +78,10 @@ dependencies {
     implementation 'dev.chrisbanes.accompanist:accompanist-insets:0.6.2'
 
     testImplementation 'junit:junit:4.13.2'
+    testImplementation "org.mockito.kotlin:mockito-kotlin:2.2.8"
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
+    androidTestImplementation "org.mockito:mockito-android:3.0.0"
+    androidTestImplementation "org.mockito.kotlin:mockito-kotlin:2.2.8"
 }

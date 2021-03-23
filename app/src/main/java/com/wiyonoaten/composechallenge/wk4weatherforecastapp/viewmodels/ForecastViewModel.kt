@@ -20,7 +20,7 @@ private const val USE_STUB_DATA = true
 
 class ForecastViewModel(
     private val coroutineScope: CoroutineScope
-) : ViewModel() {
+) : ViewModel(), IForecastViewModel {
 
     private val repository = if (USE_STUB_DATA) StubWeatherForecastRepository() else WeatherForecastRepositoryImpl()
 
@@ -28,51 +28,51 @@ class ForecastViewModel(
 
     // region States
 
-    var measurementSystem: MeasurementSystem by mutableStateOf(MeasurementSystem.values().first())
+    override var measurementSystem: MeasurementSystem by mutableStateOf(MeasurementSystem.values().first())
         private set
 
-    var isLoading: Boolean by mutableStateOf(false)
+    override var isLoading: Boolean by mutableStateOf(false)
         private set
 
-    var selectedLocation: LocationInfo by mutableStateOf(UseCurrentLocation)
+    override var selectedLocation: LocationInfo by mutableStateOf(UseCurrentLocation)
         private set
 
-    var availableLocations: List<LocationInfo> by mutableStateOf(listOf(UseCurrentLocation))
+    override var availableLocations: List<LocationInfo> by mutableStateOf(listOf(UseCurrentLocation))
         private set
 
-    var availableForecastDates: List<String> by mutableStateOf(emptyList())
+    override var availableForecastDates: List<String> by mutableStateOf(emptyList())
         private set
 
-    val selectedDateIndex: Int
+    override val selectedDateIndex: Int
         get() = selectedDailyForecast?.let { dailyForecasts.indexOf(it) } ?: 0
 
-    var selectedDailyForecast: DailyForecastInfo? by mutableStateOf(null)
+    override var selectedDailyForecast: DailyForecastInfo? by mutableStateOf(null)
         private set
 
-    val hasPreviousDay: Boolean
+    override val hasPreviousDay: Boolean
         get() = selectedDateIndex > 0
 
-    val hasNextDay: Boolean
+    override val hasNextDay: Boolean
         get() = selectedDateIndex < dailyForecasts.size - 1
 
     // endregion
 
     // region Events
 
-    fun onRefresh() {
+    override fun onRefresh() {
         coroutineScope.launch {
             doRefresh()
         }
     }
 
-    fun onSelectLocation(location: LocationInfo) {
+    override fun onSelectLocation(location: LocationInfo) {
         coroutineScope.launch {
             selectedLocation = location
             doRefresh()
         }
     }
 
-    fun onSelectAnotherDay(isPreviousDay: Boolean) {
+    override fun onSelectAnotherDay(isPreviousDay: Boolean) {
         val dateIndexToSelect = if (isPreviousDay) selectedDateIndex - 1 else selectedDateIndex + 1
 
         check(dateIndexToSelect in dailyForecasts.indices) {
