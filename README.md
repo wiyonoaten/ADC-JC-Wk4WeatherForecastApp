@@ -9,7 +9,7 @@ This is the single-screen weather forecast app I have done for submission to the
 
 ## :bulb: Motivation and Context
 
-Highlights include:
+#### Highlights include:
 * Simple and visually pleasing immersive design (I hope so!)
 * Using many features/practices of Jetpack Compose such as Theming, CompositionLocal, Preview, MutableState, Modifier, Slots
 * Architecture based on ViewModel, Repository, Coroutines
@@ -18,7 +18,7 @@ Highlights include:
 * Proper accessibility support
 * Instrumentation testing is covered
 
-Some novelties:
+#### Some novelties:
 * Custom integration of DropdownMenu
 * Animated gradient background
 * Swipable screen to switch between views
@@ -30,7 +30,7 @@ Last but not least, the code has in fact been prepared ready to plug in easily w
 
 ## :camera_flash: Screenshots
 <!-- You can add more screenshots here if you like -->
-<img src="/results/screenshot_1.png" width="260">&emsp;<img src="/results/screenshot_2.png" width="260">
+<img src="/results/screenshot_1.png" width="260">&emsp;<img src="/results/screenshot_2.png" width="260">&emsp;<img src="/results/screenshot_3.png" width="260">
 
 ## License
 ```
