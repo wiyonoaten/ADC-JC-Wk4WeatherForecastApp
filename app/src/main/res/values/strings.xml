@@ -10,4 +10,16 @@
       the License.
       -->
     <string name="app_name">Wk4WeatherForecastApp</string>
+
+    <string name="label_location">Location</string>
+    <string name="label_choose_another_location">Choose another location</string>
+    <string name="label_refresh">Refresh</string>
+
+    <string name="description_heading_current_forecast_fmt">Current forecast is %1$s</string>
+    <string name="description_heading_dates_selection">Date selection, swipe left or right to switch</string>
+
+    <string name="description_wind_speed_fmt">Wind speed is %1$s</string>
+    <string name="description_chance_of_rain_fmt">Chance of rain is %1$s</string>
+    <string name="description_hourly_forecast_fmt">Weather at %1$s is %2$s</string>
+    <string name="description_hourly_chance_of_rain_percentage_fmt">Chance of rain at %1$s is %2$d %%</string>
 </resources>

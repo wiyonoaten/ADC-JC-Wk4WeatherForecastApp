@@ -80,6 +80,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect.Companion.dashPathEffect
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -243,7 +248,7 @@ private fun LocationSelector(
         ) {
             Icon(
                 imageVector = Icons.Filled.LocationOn,
-                contentDescription = "Location",
+                contentDescription = stringResource(R.string.label_location),
                 modifier = Modifier
                     .size(48.dp)
                     .padding(12.dp)
@@ -264,14 +269,14 @@ private fun LocationSelector(
                 Spacer(modifier = Modifier.size(20.dp))
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = "Choose another location",
+                    contentDescription = stringResource(R.string.label_choose_another_location),
                     modifier = Modifier.size(24.dp)
                 )
             }
             Spacer(modifier = Modifier.weight(1.0f))
             Icon(
                 imageVector = Icons.Outlined.Refresh,
-                contentDescription = "Refresh",
+                contentDescription = stringResource(R.string.label_refresh),
                 modifier = Modifier
                     .offset(x = 24.dp)
                     .size(48.dp)
@@ -402,15 +407,21 @@ private fun DayForecastPanel(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
     ) {
         with(forecastInfo) {
+            val headingDescriptionText = stringResource(R.string.description_heading_current_forecast_fmt, description)
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.semantics(mergeDescendants = true) {
+                    heading()
+                    contentDescription = headingDescriptionText
+                }
             ) {
                 Icon(
                     painter = painterResource(id = iconResId),
-                    contentDescription = "Weather",
+                    contentDescription = null,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.size(4.dp))
@@ -432,10 +443,11 @@ private fun DayForecastPanel(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val windSpeedContentDescription = stringResource(R.string.description_wind_speed_fmt, windSpeed)
                 Icon(
                     imageVector = Icons.Outlined.Speed,
                     tint = gray100,
-                    contentDescription = "Wind speed",
+                    contentDescription = null,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.size(4.dp))
@@ -443,13 +455,15 @@ private fun DayForecastPanel(
                     maxLines = 1,
                     text = windSpeed,
                     style = MaterialTheme.typography.subtitle1,
-                    color = gray100
+                    color = gray100,
+                    modifier = Modifier.semantics { contentDescription = windSpeedContentDescription }
                 )
                 Spacer(modifier = Modifier.size(16.dp))
+                val corContentDescription = stringResource(R.string.description_chance_of_rain_fmt, chanceOfRain)
                 Icon(
                     imageVector = Icons.Outlined.Grain,
                     tint = gray100,
-                    contentDescription = "Chance of rain",
+                    contentDescription = null,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.size(4.dp))
@@ -457,7 +471,8 @@ private fun DayForecastPanel(
                     maxLines = 1,
                     text = chanceOfRain,
                     style = MaterialTheme.typography.subtitle1,
-                    color = gray100
+                    color = gray100,
+                    modifier = Modifier.semantics { contentDescription = corContentDescription }
                 )
             }
         }
@@ -502,11 +517,16 @@ private fun DatesPanel(
         prevSelectedDateIndex = selectedDateIndex
     }
 
+    val headingDescriptionText = stringResource(R.string.description_heading_dates_selection)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(scrollState, enabled = false)
+            .semantics {
+                heading()
+                contentDescription = headingDescriptionText
+            }
     ) {
         availableForecastDates.forEachIndexed { index, it ->
             Row(
@@ -555,6 +575,7 @@ private fun HourlyForecastPanel(
     ) {
         items(hourlyForecast.size) {
             with(hourlyForecast[it]) {
+                val contentDescriptionText = stringResource(R.string.description_hourly_forecast_fmt, time, temperature)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
@@ -562,6 +583,9 @@ private fun HourlyForecastPanel(
                         .clip(MaterialTheme.shapes.medium)
                         .background(Color.White.copy(alpha = 0.25f))
                         .padding(horizontal = 32.dp, vertical = 16.dp)
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = contentDescriptionText
+                        }
                 ) {
                     Text(
                         maxLines = 1,
@@ -572,7 +596,7 @@ private fun HourlyForecastPanel(
                     Spacer(modifier = Modifier.size(8.dp))
                     Icon(
                         painter = painterResource(id = iconResId),
-                        contentDescription = "Weather",
+                        contentDescription = null,
                         modifier = Modifier.size(64.dp)
                     )
                     Spacer(modifier = Modifier.size(8.dp))
@@ -599,7 +623,8 @@ private fun ChanceOfRainPanel(
         Text(
             maxLines = 1,
             text = "Chance of rain",
-            style = MaterialTheme.typography.h6
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.semantics { heading() }
         )
         Spacer(modifier = Modifier.size(16.dp))
         Row(
@@ -611,6 +636,7 @@ private fun ChanceOfRainPanel(
                 modifier = Modifier
                     .width(48.dp)
                     .fillMaxHeight()
+                    .clearAndSetSemantics { }
             ) {
                 Box(
                     contentAlignment = Alignment.TopStart,
@@ -648,11 +674,17 @@ private fun ChanceOfRainPanel(
                 modifier = Modifier.fillMaxSize()
             ) {
                 hourlyForecast.forEachIndexed { index, it ->
+                    val contentDescriptionText = stringResource(
+                        R.string.description_hourly_chance_of_rain_percentage_fmt,
+                        it.time,
+                        it.chanceOfRainPct.roundToInt()
+                    )
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .weight(1.0f)
                             .fillMaxHeight()
+                            .semantics(mergeDescendants = true) { this.contentDescription = contentDescriptionText }
                     ) {
                         Box(
                             contentAlignment = Alignment.BottomCenter,
@@ -687,7 +719,9 @@ private fun ChanceOfRainPanel(
             Spacer(modifier = Modifier.size(48.dp))
             Row(
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clearAndSetSemantics { }
             ) {
                 hourlyForecast.forEach {
                     Text(
