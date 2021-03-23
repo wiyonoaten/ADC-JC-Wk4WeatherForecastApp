@@ -108,7 +108,7 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.theme.gray400
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toBackgroundColorGradient
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toDisplayText
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModel
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.IForecastViewModel
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModelImpl
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_FORECAST_DATES
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_LOCATIONS
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.makeSampleDailyForecast
@@ -122,7 +122,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 class MainActivity : BaseActivity() {
-    private lateinit var viewModel: ForecastViewModel
+    private lateinit var viewModel: ForecastViewModelImpl
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -132,9 +132,9 @@ class MainActivity : BaseActivity() {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-                    ForecastViewModel(lifecycleScope) as T
+                    ForecastViewModelImpl(lifecycleScope) as T
             }
-        ).get(ForecastViewModel::class.java)
+        ).get(ForecastViewModelImpl::class.java)
 
         setContent {
             MyTheme {
@@ -147,7 +147,7 @@ class MainActivity : BaseActivity() {
 @VisibleForTesting(otherwise = PRIVATE)
 @Composable
 internal fun ActivityScreen(
-    viewModel: IForecastViewModel
+    viewModel: ForecastViewModel
 ) {
     with(viewModel) {
         val hasPreviousDayState = remember { derivedStateOf { viewModel.hasPreviousDay } }
