@@ -22,7 +22,10 @@ import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -394,7 +397,6 @@ private fun ForecastView(
             DatesPanel(availableForecastDates, selectedDateIndex)
             Spacer(modifier = Modifier.size(16.dp))
             HourlyForecastPanel(selectedDateIndex, selectedDailyForecast.hourly)
-            Spacer(modifier = Modifier.size(32.dp))
             ChanceOfRainPanel(selectedDailyForecast.hourly.take(6), modifier = Modifier.padding(end = 16.dp))
         }
     }
@@ -570,9 +572,12 @@ private fun HourlyForecastPanel(
 
     val lazyListState = rememberLazyListState()
 
+    var needStartAnimation by remember { mutableStateOf(true) }
+
     var prevSelectedDateIndex by remember { mutableStateOf(0) }
 
     if (prevSelectedDateIndex != selectedDateIndex) {
+        needStartAnimation = true
         coroutineScope.launch {
             lazyListState.scrollToItem(0)
             prevSelectedDateIndex = selectedDateIndex
@@ -584,39 +589,70 @@ private fun HourlyForecastPanel(
         modifier = modifier
             .fillMaxWidth()
     ) {
-        items(hourlyForecast.size) {
-            with(hourlyForecast[it]) {
-                val contentDescriptionText = stringResource(R.string.description_hourly_forecast_fmt, time, temperature)
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(end = 20.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(Color.White.copy(alpha = 0.25f))
-                        .padding(horizontal = 32.dp, vertical = 16.dp)
-                        .semantics(mergeDescendants = true) {
-                            contentDescription = contentDescriptionText
-                        }
+        items(hourlyForecast.size) { index ->
+            with(hourlyForecast[index]) {
+                val offset: IntOffset by remember {
+                    derivedStateOf {
+                        if (needStartAnimation) IntOffset(0, 32) else IntOffset(0, 0)
+                    }
+                }
+
+                val animatedOffset by animateIntOffsetAsState(
+                    targetValue = offset,
+                    animationSpec = tween(75, index * 60, easing = FastOutLinearInEasing)
                 ) {
-                    Text(
-                        maxLines = 1,
-                        text = time,
-                        style = MaterialTheme.typography.body2,
-                        color = gray100
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Icon(
-                        painter = painterResource(id = iconResId),
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(
-                        maxLines = 1,
-                        text = temperature,
-                        style = MaterialTheme.typography.h3,
-                        color = gray400
-                    )
+                    if (index == 2) {
+                        needStartAnimation = false
+                    }
+                }
+
+                val alpha: Float by remember {
+                    derivedStateOf {
+                        if (needStartAnimation) 0.5f else 1.0f
+                    }
+                }
+
+                val animatedAlpha by animateFloatAsState(
+                    targetValue = alpha,
+                    animationSpec = tween(75, index * 60, easing = FastOutLinearInEasing)
+                )
+
+                val contentDescriptionText = stringResource(R.string.description_hourly_forecast_fmt, time, temperature)
+                Column {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .offset { with(animatedOffset) { IntOffset(x.dp.roundToPx(), y.dp.roundToPx()) } }
+                            .alpha(animatedAlpha)
+                            .padding(end = 20.dp)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(Color.White.copy(alpha = 0.25f))
+                            .padding(horizontal = 32.dp, vertical = 16.dp)
+                            .semantics(mergeDescendants = true) {
+                                contentDescription = contentDescriptionText
+                            }
+                    ) {
+                        Text(
+                            maxLines = 1,
+                            text = time,
+                            style = MaterialTheme.typography.body2,
+                            color = gray100
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Icon(
+                            painter = painterResource(id = iconResId),
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            maxLines = 1,
+                            text = temperature,
+                            style = MaterialTheme.typography.h3,
+                            color = gray400
+                        )
+                    }
+                    Spacer(modifier = Modifier.size(32.dp))
                 }
             }
         }
