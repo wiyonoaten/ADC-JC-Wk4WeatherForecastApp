@@ -24,9 +24,11 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.animateIntOffset
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +39,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -369,9 +372,12 @@ private fun ForecastView(
             }
             .alpha(
                 swipeableState.offset.value.let { swipeOffset ->
-                    if (swipeOffset.isNaN()) 1.0f else 1.0f - swipeOffset.absoluteValue / containerWidth
-                        .toFloat()
-                        .div(2f)
+                    when {
+                        swipeOffset.isNaN() -> 1.0f
+                        else -> 1.0f - swipeOffset.absoluteValue / containerWidth
+                            .toFloat()
+                            .div(2f)
+                    }
                 }
             )
             .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
@@ -379,9 +385,17 @@ private fun ForecastView(
                 swipeableState,
                 enabled = isSwipingEnabled,
                 anchors = mutableMapOf<Float, Int>().apply {
-                    put(containerWidth.toFloat().div(2f), -1)
+                    put(
+                        containerWidth
+                            .toFloat()
+                            .div(2f), -1
+                    )
                     put(0f, 0)
-                    put(-containerWidth.toFloat().div(2f), 1)
+                    put(
+                        -containerWidth
+                            .toFloat()
+                            .div(2f), 1
+                    )
                 },
                 orientation = Orientation.Horizontal,
                 thresholds = { _, _ -> FractionalThreshold(0.3f) }
@@ -397,7 +411,11 @@ private fun ForecastView(
             DatesPanel(availableForecastDates, selectedDateIndex)
             Spacer(modifier = Modifier.size(16.dp))
             HourlyForecastPanel(selectedDateIndex, selectedDailyForecast.hourly)
-            ChanceOfRainPanel(selectedDailyForecast.hourly.take(6), modifier = Modifier.padding(end = 16.dp))
+            ChanceOfRainPanel(
+                isCurrentDate = selectedDateIndex == 0,
+                hourlyForecast = selectedDailyForecast.hourly.take(6),
+                modifier = Modifier.padding(end = 16.dp)
+            )
         }
     }
 }
@@ -525,8 +543,6 @@ private fun DatesPanel(
         } else {
             prevSelectedDateIndex = selectedDateIndex
         }
-    } else {
-        prevSelectedDateIndex = selectedDateIndex
     }
 
     val headingDescriptionText = stringResource(R.string.description_heading_dates_selection)
@@ -577,10 +593,10 @@ private fun HourlyForecastPanel(
     var prevSelectedDateIndex by remember { mutableStateOf(0) }
 
     if (prevSelectedDateIndex != selectedDateIndex) {
-        needStartAnimation = true
         coroutineScope.launch {
             lazyListState.scrollToItem(0)
             prevSelectedDateIndex = selectedDateIndex
+            needStartAnimation = true
         }
     }
 
@@ -591,31 +607,28 @@ private fun HourlyForecastPanel(
     ) {
         items(hourlyForecast.size) { index ->
             with(hourlyForecast[index]) {
-                val offset: IntOffset by remember {
-                    derivedStateOf {
-                        if (needStartAnimation) IntOffset(0, 32) else IntOffset(0, 0)
-                    }
-                }
+                val startAnimationTransition = updateTransition(targetState = needStartAnimation)
 
-                val animatedOffset by animateIntOffsetAsState(
-                    targetValue = offset,
-                    animationSpec = tween(75, index * 60, easing = FastOutLinearInEasing)
+                val animatedOffset by startAnimationTransition.animateIntOffset(
+                    transitionSpec = {
+                        tween(75, index * 60, easing = FastOutLinearInEasing)
+                    }
                 ) {
-                    if (index == 2) {
-                        needStartAnimation = false
-                    }
+                    if (needStartAnimation) IntOffset(0, 32) else IntOffset(0, 0)
                 }
 
-                val alpha: Float by remember {
-                    derivedStateOf {
-                        if (needStartAnimation) 0.5f else 1.0f
+                val animatedAlpha by startAnimationTransition.animateFloat(
+                    transitionSpec = {
+                        tween(75, index * 60, easing = FastOutLinearInEasing)
                     }
+                ) {
+                    if (needStartAnimation) 0.5f else 1.0f
                 }
 
-                val animatedAlpha by animateFloatAsState(
-                    targetValue = alpha,
-                    animationSpec = tween(75, index * 60, easing = FastOutLinearInEasing)
-                )
+                if (startAnimationTransition.currentState == startAnimationTransition.targetState
+                    && index == 2.coerceAtMost(hourlyForecast.lastIndex)) {
+                    needStartAnimation = false
+                }
 
                 val contentDescriptionText = stringResource(R.string.description_hourly_forecast_fmt, time, temperature)
                 Column {
@@ -661,6 +674,7 @@ private fun HourlyForecastPanel(
 
 @Composable
 private fun ChanceOfRainPanel(
+    isCurrentDate: Boolean,
     hourlyForecast: List<HourlyForecastInfo>,
     modifier: Modifier = Modifier
 ) {
@@ -678,107 +692,134 @@ private fun ChanceOfRainPanel(
             verticalAlignment = Alignment.Top,
             modifier = Modifier.height(120.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
+            CorRainyAxisLabels(
                 modifier = Modifier
                     .width(48.dp)
                     .fillMaxHeight()
-                    .clearAndSetSemantics { }
-            ) {
-                Box(
-                    contentAlignment = Alignment.TopStart,
-                    modifier = Modifier.weight(1.0f)
-                ) {
-                    Text(
-                        maxLines = 2,
-                        text = "sunny",
-                        style = MaterialTheme.typography.caption
-                    )
-                }
-                Box(
-                    contentAlignment = Alignment.TopStart,
-                    modifier = Modifier.weight(1.0f)
-                ) {
-                    Text(
-                        maxLines = 2,
-                        text = "rainy",
-                        style = MaterialTheme.typography.caption
-                    )
-                }
-                Box(
-                    contentAlignment = Alignment.TopStart,
-                    modifier = Modifier.weight(1.0f)
-                ) {
-                    Text(
-                        maxLines = 2,
-                        text = "heavy rain",
-                        style = MaterialTheme.typography.caption
-                    )
-                }
-            }
-            Row(
-                horizontalArrangement = Arrangement.Center,
+            )
+            CorChart(
+                isCurrentDate = isCurrentDate,
+                hourlyForecast = hourlyForecast,
                 modifier = Modifier.fillMaxSize()
-            ) {
-                hourlyForecast.forEachIndexed { index, it ->
-                    val contentDescriptionText = stringResource(
-                        R.string.description_hourly_chance_of_rain_percentage_fmt,
-                        it.time,
-                        it.chanceOfRainPct.roundToInt()
-                    )
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .weight(1.0f)
-                            .fillMaxHeight()
-                            .semantics(mergeDescendants = true) { this.contentDescription = contentDescriptionText }
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.BottomCenter,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Canvas(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .width(1.dp)
-                            ) {
-                                drawLine(
-                                    color = gray200,
-                                    Offset(0.0f, 0.0f),
-                                    Offset(0.0f, size.height - 1),
-                                    pathEffect = dashPathEffect(floatArrayOf(10.0f, 10.0f), 0.0f)
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .width(20.dp)
-                                    .fillMaxHeight(1.0f - (it.chanceOfRainPct / 100.0f).coerceAtMost(1.0f))
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (index == 0) amber200 else gray200)
-                            )
-                        }
-                    }
-                }
-            }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CorRainyAxisLabels(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier.clearAndSetSemantics { }
+    ) {
+        Box(
+            contentAlignment = Alignment.TopStart,
+            modifier = Modifier.weight(1.0f)
+        ) {
+            Text(
+                maxLines = 2,
+                text = "sunny",
+                style = MaterialTheme.typography.caption
+            )
+        }
+        Box(
+            contentAlignment = Alignment.TopStart,
+            modifier = Modifier.weight(1.0f)
+        ) {
+            Text(
+                maxLines = 2,
+                text = "rainy",
+                style = MaterialTheme.typography.caption
+            )
+        }
+        Box(
+            contentAlignment = Alignment.TopStart,
+            modifier = Modifier.weight(1.0f)
+        ) {
+            Text(
+                maxLines = 2,
+                text = "heavy rain",
+                style = MaterialTheme.typography.caption
+            )
         }
         Spacer(modifier = Modifier.size(8.dp))
-        Row {
-            Spacer(modifier = Modifier.size(48.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center,
+        Text(
+            maxLines = 1,
+            text = "99AM",
+            style = MaterialTheme.typography.body2,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .alpha(0.0f)
+                .clearAndSetSemantics { }
+        )
+    }
+}
+
+@Composable
+private fun CorChart(
+    isCurrentDate: Boolean,
+    hourlyForecast: List<HourlyForecastInfo>,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = if (hourlyForecast.size > 2) Arrangement.SpaceEvenly else Arrangement.Start,
+        modifier = modifier.horizontalScroll(rememberScrollState())
+    ) {
+        hourlyForecast.forEachIndexed { index, it ->
+            val contentDescriptionText = stringResource(
+                R.string.description_hourly_chance_of_rain_percentage_fmt,
+                it.time,
+                it.chanceOfRainPct.roundToInt()
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clearAndSetSemantics { }
+                    .apply {
+                        if (hourlyForecast.size > 2) this.weight(1.0f)
+                    }
+                    .fillMaxHeight()
+                    .padding(horizontal = 6.dp)
+                    .semantics(mergeDescendants = true) { this.contentDescription = contentDescriptionText }
             ) {
-                hourlyForecast.forEach {
-                    Text(
-                        maxLines = 1,
-                        text = it.time,
-                        style = MaterialTheme.typography.body2,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1.0f)
+                Box(
+                    contentAlignment = Alignment.BottomCenter,
+                    modifier = Modifier.weight(1.0f)
+                ) {
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(1.dp)
+                    ) {
+                        drawLine(
+                            color = gray200,
+                            Offset(0.0f, 0.0f),
+                            Offset(0.0f, size.height - 1),
+                            pathEffect = dashPathEffect(floatArrayOf(10.0f, 10.0f), 0.0f)
+                        )
+                    }
+                    val animatedMaxHeightFraction by animateFloatAsState(
+                        targetValue = 1.0f - (it.chanceOfRainPct / 100.0f).coerceAtMost(1.0f),
+                        animationSpec = tween(durationMillis = 1000, delayMillis = 120)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(20.dp)
+                            .defaultMinSize(minHeight = 20.dp)
+                            .fillMaxHeight(animatedMaxHeightFraction)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isCurrentDate && index == 0) amber200 else gray200)
                     )
                 }
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    maxLines = 1,
+                    text = it.time,
+                    style = MaterialTheme.typography.body2,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.clearAndSetSemantics { }
+                )
             }
         }
     }
@@ -830,5 +871,49 @@ private fun LoadingLightPreview() {
 private fun DarkPreview() {
     MyTheme(darkTheme = true) {
         ForecastDashboardPreview()
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun ChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun SingleHourChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly.take(1)
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun DoubleHourChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly.take(2)
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun TooManyHoursChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly + makeSampleDailyForecast(0).hourly
+        )
     }
 }
