@@ -21,6 +21,7 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.DailyForecas
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.HourlyForecast
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.IconId
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.SpeedUnit
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Temperature
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.TemperatureUnit
@@ -35,7 +36,10 @@ import kotlin.coroutines.suspendCoroutine
 
 class StubWeatherForecastRepository : IWeatherForecastRepository {
 
-    override suspend fun loadMainForecast(location: Geolocation): WeatherForecast = suspendCoroutine { continuation ->
+    override suspend fun loadMainForecast(
+        location: Geolocation,
+        measurementSystem: MeasurementSystem
+    ): WeatherForecast = suspendCoroutine { continuation ->
         CoroutineScope(continuation.context).launch {
             delay(1000)
 

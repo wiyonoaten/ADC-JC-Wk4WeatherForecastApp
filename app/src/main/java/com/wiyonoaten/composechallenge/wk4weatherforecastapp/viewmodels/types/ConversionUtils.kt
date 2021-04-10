@@ -48,7 +48,7 @@ fun WeatherForecast.toDailyForecastInfos(
                         time.format(DateTimeFormatter.ofPattern("h a", Locale.ENGLISH)),
                         iconResId = iconId.toDrawableResId(),
                         temperature = temperature.toFormattedText(system),
-                        chanceOfRainPct = chanceOfRain
+                        chanceOfRainPct = chanceOfRain * 100.0f
                     )
                 }
             }

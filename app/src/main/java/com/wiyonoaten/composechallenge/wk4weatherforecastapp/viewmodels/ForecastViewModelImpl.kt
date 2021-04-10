@@ -27,7 +27,7 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.to
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-private const val USE_STUB_DATA = true
+private const val USE_STUB_DATA = false
 
 class ForecastViewModelImpl(
     private val coroutineScope: CoroutineScope
@@ -112,7 +112,7 @@ class ForecastViewModelImpl(
     private suspend fun doRefresh() {
         isLoading = true
 
-        dailyForecasts = repository.loadMainForecast(selectedLocation.geolocation)
+        dailyForecasts = repository.loadMainForecast(selectedLocation.geolocation, measurementSystem)
             .toDailyForecastInfos(measurementSystem)
 
         availableForecastDates = dailyForecasts.map { it.date }

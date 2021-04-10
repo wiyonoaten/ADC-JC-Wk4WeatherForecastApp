@@ -15,12 +15,17 @@
  */
 package com.wiyonoaten.composechallenge.wk4weatherforecastapp.data
 
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.data.providers.IWeatherForecastProvider
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.data.providers.WeatherForecastProviderImpl
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.WeatherForecast
 
 class WeatherForecastRepositoryImpl : IWeatherForecastRepository {
 
-    override suspend fun loadMainForecast(location: Geolocation): WeatherForecast {
-        TODO("Not yet implemented")
+    private val forecastProvider: IWeatherForecastProvider = WeatherForecastProviderImpl()
+
+    override suspend fun loadMainForecast(location: Geolocation, measurementSystem: MeasurementSystem): WeatherForecast {
+        return forecastProvider.fetchCurrentForecast(location, measurementSystem)
     }
 }
