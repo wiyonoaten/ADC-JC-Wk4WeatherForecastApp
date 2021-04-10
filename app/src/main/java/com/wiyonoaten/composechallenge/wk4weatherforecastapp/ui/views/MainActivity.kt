@@ -437,9 +437,7 @@ private fun ForecastView(
                 swipeableState.offset.value.let { swipeOffset ->
                     when {
                         swipeOffset.isNaN() -> 1.0f
-                        else -> 1.0f - swipeOffset.absoluteValue / containerWidth
-                            .toFloat()
-                            .div(2f)
+                        else -> 1.0f - swipeOffset.absoluteValue / containerWidth.toFloat().div(2f)
                     }
                 }
             )
@@ -448,17 +446,9 @@ private fun ForecastView(
                 swipeableState,
                 enabled = isSwipingEnabled,
                 anchors = mutableMapOf<Float, Int>().apply {
-                    put(
-                        containerWidth
-                            .toFloat()
-                            .div(2f), -1
-                    )
+                    put(containerWidth.toFloat().div(2f), -1)
                     put(0f, 0)
-                    put(
-                        -containerWidth
-                            .toFloat()
-                            .div(2f), 1
-                    )
+                    put(-containerWidth.toFloat().div(2f), 1)
                 },
                 orientation = Orientation.Horizontal,
                 thresholds = { _, _ -> FractionalThreshold(0.3f) }
@@ -688,8 +678,9 @@ private fun HourlyForecastPanel(
                     if (needStartAnimation) 0.5f else 1.0f
                 }
 
-                if (startAnimationTransition.currentState == startAnimationTransition.targetState
-                    && index == 2.coerceAtMost(hourlyForecast.lastIndex)) {
+                if (startAnimationTransition.currentState == startAnimationTransition.targetState &&
+                    index == 2.coerceAtMost(hourlyForecast.lastIndex)
+                ) {
                     needStartAnimation = false
                 }
 

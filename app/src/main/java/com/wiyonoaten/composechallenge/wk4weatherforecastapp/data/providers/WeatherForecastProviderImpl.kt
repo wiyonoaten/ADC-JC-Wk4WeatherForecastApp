@@ -68,7 +68,7 @@ class WeatherForecastProviderImpl : IWeatherForecastProvider {
                 )
             },
             daily = oneCallResponse.daily.take(5).mapIndexed { index, it ->
-                with (it) {
+                with(it) {
                     val thisDayTime = dt.epochToOffsetDateTime()
                     val dailyWeather = weather.first()
                     val mainTemp = if (index == 0) oneCallResponse.current.temp else temp.day ?: temp.min
@@ -86,13 +86,15 @@ class WeatherForecastProviderImpl : IWeatherForecastProvider {
                             .takeLast(fiveDayHourlyForecastResponse.list.size - hourlyIndex)
                             .filter {
                                 val thisHourlyTime = it.dt.epochToOffsetDateTime()
-                                (thisHourlyTime.dayOfMonth == thisDayTime.dayOfMonth
-                                        || (thisHourlyTime.dayOfMonth == thisDayTime.plusDays(1).dayOfMonth
-                                            && thisHourlyTime.hour == 0 && thisHourlyTime.minute == 0 && thisHourlyTime.second == 0)).also { isFiltered ->
+                                with(thisHourlyTime) {
+                                    val isFiltered = dayOfMonth == thisDayTime.dayOfMonth ||
+                                        dayOfMonth == thisDayTime.plusDays(1).dayOfMonth &&
+                                        hour == 0 && minute == 0 && second == 0
                                     if (isFiltered) ++hourlyIndex
+                                    isFiltered
                                 }
                             }.map {
-                                with (it) {
+                                with(it) {
                                     val hourlyWeather = weather.first()
                                     HourlyForecast(
                                         time = dt.epochToOffsetDateTime(),
