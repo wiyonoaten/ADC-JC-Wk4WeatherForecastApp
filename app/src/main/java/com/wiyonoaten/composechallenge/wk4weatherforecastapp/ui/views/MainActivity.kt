@@ -15,10 +15,17 @@
  */
 package com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.views
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.appcompat.app.AlertDialog
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
@@ -99,10 +106,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.R
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.compositionlocals.LocalRunMode
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.compositionlocals.RunMode
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.modifiers.rememberLayoutSize
@@ -115,6 +124,7 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toBackgrou
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toDisplayText
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModel
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModelImpl
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ILocationProvider
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_FORECAST_DATES
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_LOCATIONS
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.makeSampleDailyForecast
@@ -124,10 +134,13 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.Lo
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
 import dev.chrisbanes.accompanist.insets.statusBarsHeight
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), ILocationProvider {
     private lateinit var viewModel: ForecastViewModelImpl
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -138,7 +151,7 @@ class MainActivity : BaseActivity() {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-                    ForecastViewModelImpl(lifecycleScope) as T
+                    ForecastViewModelImpl(lifecycleScope, this@MainActivity) as T
             }
         ).get(ForecastViewModelImpl::class.java)
 
@@ -146,6 +159,56 @@ class MainActivity : BaseActivity() {
             MyTheme {
                 ActivityScreen(viewModel)
             }
+        }
+    }
+
+    override suspend fun getCurrentLocation(): Geolocation = suspendCoroutine { continuation ->
+        val perm = Manifest.permission.ACCESS_FINE_LOCATION
+
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+
+        val locationListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                locationManager.removeUpdates(this)
+                continuation.resume(location.run { Geolocation(latitude.toFloat(), longitude.toFloat()) })
+            }
+        }
+        val startRequestingLocation = {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0.0f, locationListener)
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0.0f, locationListener)
+        }
+
+        runCatching {
+            when {
+                ContextCompat.checkSelfPermission(applicationContext, perm) == PackageManager.PERMISSION_GRANTED -> {
+                    // We already have the permission
+                    startRequestingLocation()
+                }
+                shouldShowRequestPermissionRationale(perm) -> {
+                    // Permission disabled, so educate user
+                    AlertDialog.Builder(this)
+                        .setTitle(R.string.alert_need_location_perm)
+                        .setMessage(R.string.alert_location_perm_education_message)
+                        .setPositiveButton(android.R.string.ok) { _, _ -> }
+                        .setNegativeButton(android.R.string.cancel) { _, _ -> }
+                        .show()
+
+                    continuation.resumeWithException(Exception("Denied location permission"))
+                }
+                else -> {
+                    // Need to request permission
+                    val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                        if (!isGranted) {
+                            continuation.resume(Geolocation(0.0f, 0.0f))
+                        } else {
+                            startRequestingLocation()
+                        }
+                    }
+                    permissionLauncher.launch(perm)
+                }
+            }
+        }.onFailure {
+            continuation.resumeWithException(it)
         }
     }
 }

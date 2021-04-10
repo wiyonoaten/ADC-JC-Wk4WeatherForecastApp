@@ -22,4 +22,7 @@
     <string name="description_chance_of_rain_fmt">Chance of rain is %1$s</string>
     <string name="description_hourly_forecast_fmt">Weather at %1$s is %2$s</string>
     <string name="description_hourly_chance_of_rain_percentage_fmt">Chance of rain at %1$s is %2$d %%</string>
+
+    <string name="alert_need_location_perm">Need Location Permission</string>
+    <string name="alert_location_perm_education_message">To check weather in your current location, please grant the app the permission to use location access. Please do that in System Settings for this app.\n\nOtherwise, you can Cancel and select one of the preset locations.</string>
 </resources>
