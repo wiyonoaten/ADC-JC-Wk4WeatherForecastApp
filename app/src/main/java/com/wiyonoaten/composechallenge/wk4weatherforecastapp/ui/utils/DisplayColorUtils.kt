@@ -34,7 +34,7 @@ fun Condition?.toBackgroundColorGradient(): Pair<Color, Color> =
     when (this) {
         Condition.Rain, Condition.Drizzle, Condition.Thunderstorm -> thunder200 to thunder400
         Condition.Snow -> snowy200 to snowy400
-        Condition.Atmosphere -> foggy200 to foggy400
+        Condition.Atmosphere, Condition.Haze -> foggy200 to foggy400
         Condition.Clear -> sunny200 to sunny400
         Condition.Clouds -> cloudy200 to cloudy400
         else -> blue200 to blue400

@@ -21,6 +21,7 @@ enum class Condition {
     Rain,
     Snow,
     Atmosphere,
+    Haze,
     Clear,
     Clouds
 }
