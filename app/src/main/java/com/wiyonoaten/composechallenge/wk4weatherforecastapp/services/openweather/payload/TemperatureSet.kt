@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wiyonoaten.composechallenge.wk4weatherforecastapp.data
+package com.wiyonoaten.composechallenge.wk4weatherforecastapp.services.openweather.payload
 
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.WeatherForecast
+import com.google.gson.annotations.SerializedName
 
-interface IWeatherForecastRepository {
-
-    suspend fun loadMainForecast(location: Geolocation, measurementSystem: MeasurementSystem): WeatherForecast
-}
+data class TemperatureSet(
+    @SerializedName("min", alternate = ["temp_min"]) val min: Float,
+    @SerializedName("max", alternate = ["temp_max"]) val max: Float,
+    val day: Float?,
+    val night: Float?,
+    @SerializedName("temp")
+    val main: Float?
+)

@@ -27,10 +27,11 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.to
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-private const val USE_STUB_DATA = true
+private const val USE_STUB_DATA = false
 
 class ForecastViewModelImpl(
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val locationProvider: ILocationProvider
 ) : ForecastViewModel() {
 
     private val repository = if (USE_STUB_DATA) StubWeatherForecastRepository() else WeatherForecastRepositoryImpl()
@@ -112,7 +113,16 @@ class ForecastViewModelImpl(
     private suspend fun doRefresh() {
         isLoading = true
 
-        dailyForecasts = repository.loadMainForecast(selectedLocation.geolocation)
+        val geolocation = when (selectedLocation) {
+            is UseCurrentLocation -> {
+                runCatching {
+                    locationProvider.getCurrentLocation()
+                }.getOrDefault(Geolocation(0.0f, 0.0f))
+            }
+            else -> selectedLocation.geolocation
+        }
+
+        dailyForecasts = repository.loadMainForecast(geolocation, measurementSystem)
             .toDailyForecastInfos(measurementSystem)
 
         availableForecastDates = dailyForecasts.map { it.date }

@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wiyonoaten.composechallenge.wk4weatherforecastapp.data
+package com.wiyonoaten.composechallenge.wk4weatherforecastapp.services.openweather.payload
 
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.WeatherForecast
-
-interface IWeatherForecastRepository {
-
-    suspend fun loadMainForecast(location: Geolocation, measurementSystem: MeasurementSystem): WeatherForecast
-}
+data class Weather(
+    val main: String,
+    val description: String,
+    val icon: String
+)

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wiyonoaten.composechallenge.wk4weatherforecastapp.data
+package com.wiyonoaten.composechallenge.wk4weatherforecastapp.services.openweather.payload
 
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.WeatherForecast
+import com.google.gson.annotations.SerializedName
 
-interface IWeatherForecastRepository {
-
-    suspend fun loadMainForecast(location: Geolocation, measurementSystem: MeasurementSystem): WeatherForecast
-}
+data class OneCallResponse(
+    val current: Current,
+    val daily: List<Daily>,
+    val timezone: String,
+    @SerializedName("timezone_offset") val timezoneOffset: Int
+)

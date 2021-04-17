@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.wiyonoaten.composechallenge.wk4weatherforecastapp.data
+package com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels
 
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.MeasurementSystem
-import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.WeatherForecast
 
-interface IWeatherForecastRepository {
+interface ILocationProvider {
 
-    suspend fun loadMainForecast(location: Geolocation, measurementSystem: MeasurementSystem): WeatherForecast
+    suspend fun getCurrentLocation(): Geolocation
 }

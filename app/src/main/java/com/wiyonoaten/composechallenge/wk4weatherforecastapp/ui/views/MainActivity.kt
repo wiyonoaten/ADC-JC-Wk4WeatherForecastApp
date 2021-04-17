@@ -15,18 +15,27 @@
  */
 package com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.views
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.appcompat.app.AlertDialog
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.animateIntOffset
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -37,6 +46,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -96,10 +106,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.R
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.models.Geolocation
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.compositionlocals.LocalRunMode
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.compositionlocals.RunMode
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.modifiers.rememberLayoutSize
@@ -112,6 +124,7 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toBackgrou
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.ui.utils.toDisplayText
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModel
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ForecastViewModelImpl
+import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.ILocationProvider
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_FORECAST_DATES
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.SAMPLE_AVAILABLE_LOCATIONS
 import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.sampledata.makeSampleDailyForecast
@@ -121,10 +134,13 @@ import com.wiyonoaten.composechallenge.wk4weatherforecastapp.viewmodels.types.Lo
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
 import dev.chrisbanes.accompanist.insets.statusBarsHeight
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), ILocationProvider {
     private lateinit var viewModel: ForecastViewModelImpl
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,7 +151,7 @@ class MainActivity : BaseActivity() {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T =
-                    ForecastViewModelImpl(lifecycleScope) as T
+                    ForecastViewModelImpl(lifecycleScope, this@MainActivity) as T
             }
         ).get(ForecastViewModelImpl::class.java)
 
@@ -143,6 +159,56 @@ class MainActivity : BaseActivity() {
             MyTheme {
                 ActivityScreen(viewModel)
             }
+        }
+    }
+
+    override suspend fun getCurrentLocation(): Geolocation = suspendCoroutine { continuation ->
+        val perm = Manifest.permission.ACCESS_FINE_LOCATION
+
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+
+        val locationListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                locationManager.removeUpdates(this)
+                continuation.resume(location.run { Geolocation(latitude.toFloat(), longitude.toFloat()) })
+            }
+        }
+        val startRequestingLocation = {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0L, 0.0f, locationListener)
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0L, 0.0f, locationListener)
+        }
+
+        runCatching {
+            when {
+                ContextCompat.checkSelfPermission(applicationContext, perm) == PackageManager.PERMISSION_GRANTED -> {
+                    // We already have the permission
+                    startRequestingLocation()
+                }
+                shouldShowRequestPermissionRationale(perm) -> {
+                    // Permission disabled, so educate user
+                    AlertDialog.Builder(this)
+                        .setTitle(R.string.alert_need_location_perm)
+                        .setMessage(R.string.alert_location_perm_education_message)
+                        .setPositiveButton(android.R.string.ok) { _, _ -> }
+                        .setNegativeButton(android.R.string.cancel) { _, _ -> }
+                        .show()
+
+                    continuation.resumeWithException(Exception("Denied location permission"))
+                }
+                else -> {
+                    // Need to request permission
+                    val permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                        if (!isGranted) {
+                            continuation.resume(Geolocation(0.0f, 0.0f))
+                        } else {
+                            startRequestingLocation()
+                        }
+                    }
+                    permissionLauncher.launch(perm)
+                }
+            }
+        }.onFailure {
+            continuation.resumeWithException(it)
         }
     }
 }
@@ -369,9 +435,10 @@ private fun ForecastView(
             }
             .alpha(
                 swipeableState.offset.value.let { swipeOffset ->
-                    if (swipeOffset.isNaN()) 1.0f else 1.0f - swipeOffset.absoluteValue / containerWidth
-                        .toFloat()
-                        .div(2f)
+                    when {
+                        swipeOffset.isNaN() -> 1.0f
+                        else -> 1.0f - swipeOffset.absoluteValue / containerWidth.toFloat().div(2f)
+                    }
                 }
             )
             .padding(start = 16.dp, top = 12.dp, bottom = 12.dp)
@@ -397,7 +464,11 @@ private fun ForecastView(
             DatesPanel(availableForecastDates, selectedDateIndex)
             Spacer(modifier = Modifier.size(16.dp))
             HourlyForecastPanel(selectedDateIndex, selectedDailyForecast.hourly)
-            ChanceOfRainPanel(selectedDailyForecast.hourly.take(6), modifier = Modifier.padding(end = 16.dp))
+            ChanceOfRainPanel(
+                isCurrentDate = selectedDateIndex == 0,
+                hourlyForecast = selectedDailyForecast.hourly.take(6),
+                modifier = Modifier.padding(end = 16.dp)
+            )
         }
     }
 }
@@ -525,8 +596,6 @@ private fun DatesPanel(
         } else {
             prevSelectedDateIndex = selectedDateIndex
         }
-    } else {
-        prevSelectedDateIndex = selectedDateIndex
     }
 
     val headingDescriptionText = stringResource(R.string.description_heading_dates_selection)
@@ -577,10 +646,10 @@ private fun HourlyForecastPanel(
     var prevSelectedDateIndex by remember { mutableStateOf(0) }
 
     if (prevSelectedDateIndex != selectedDateIndex) {
-        needStartAnimation = true
         coroutineScope.launch {
             lazyListState.scrollToItem(0)
             prevSelectedDateIndex = selectedDateIndex
+            needStartAnimation = true
         }
     }
 
@@ -591,31 +660,29 @@ private fun HourlyForecastPanel(
     ) {
         items(hourlyForecast.size) { index ->
             with(hourlyForecast[index]) {
-                val offset: IntOffset by remember {
-                    derivedStateOf {
-                        if (needStartAnimation) IntOffset(0, 32) else IntOffset(0, 0)
-                    }
-                }
+                val startAnimationTransition = updateTransition(targetState = needStartAnimation)
 
-                val animatedOffset by animateIntOffsetAsState(
-                    targetValue = offset,
-                    animationSpec = tween(75, index * 60, easing = FastOutLinearInEasing)
+                val animatedOffset by startAnimationTransition.animateIntOffset(
+                    transitionSpec = {
+                        tween(75, index * 60, easing = FastOutLinearInEasing)
+                    }
                 ) {
-                    if (index == 2) {
-                        needStartAnimation = false
-                    }
+                    if (needStartAnimation) IntOffset(0, 32) else IntOffset(0, 0)
                 }
 
-                val alpha: Float by remember {
-                    derivedStateOf {
-                        if (needStartAnimation) 0.5f else 1.0f
+                val animatedAlpha by startAnimationTransition.animateFloat(
+                    transitionSpec = {
+                        tween(75, index * 60, easing = FastOutLinearInEasing)
                     }
+                ) {
+                    if (needStartAnimation) 0.5f else 1.0f
                 }
 
-                val animatedAlpha by animateFloatAsState(
-                    targetValue = alpha,
-                    animationSpec = tween(75, index * 60, easing = FastOutLinearInEasing)
-                )
+                if (startAnimationTransition.currentState == startAnimationTransition.targetState &&
+                    index == 2.coerceAtMost(hourlyForecast.lastIndex)
+                ) {
+                    needStartAnimation = false
+                }
 
                 val contentDescriptionText = stringResource(R.string.description_hourly_forecast_fmt, time, temperature)
                 Column {
@@ -661,6 +728,7 @@ private fun HourlyForecastPanel(
 
 @Composable
 private fun ChanceOfRainPanel(
+    isCurrentDate: Boolean,
     hourlyForecast: List<HourlyForecastInfo>,
     modifier: Modifier = Modifier
 ) {
@@ -678,107 +746,134 @@ private fun ChanceOfRainPanel(
             verticalAlignment = Alignment.Top,
             modifier = Modifier.height(120.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
+            CorRainyAxisLabels(
                 modifier = Modifier
                     .width(48.dp)
                     .fillMaxHeight()
-                    .clearAndSetSemantics { }
-            ) {
-                Box(
-                    contentAlignment = Alignment.TopStart,
-                    modifier = Modifier.weight(1.0f)
-                ) {
-                    Text(
-                        maxLines = 2,
-                        text = "sunny",
-                        style = MaterialTheme.typography.caption
-                    )
-                }
-                Box(
-                    contentAlignment = Alignment.TopStart,
-                    modifier = Modifier.weight(1.0f)
-                ) {
-                    Text(
-                        maxLines = 2,
-                        text = "rainy",
-                        style = MaterialTheme.typography.caption
-                    )
-                }
-                Box(
-                    contentAlignment = Alignment.TopStart,
-                    modifier = Modifier.weight(1.0f)
-                ) {
-                    Text(
-                        maxLines = 2,
-                        text = "heavy rain",
-                        style = MaterialTheme.typography.caption
-                    )
-                }
-            }
-            Row(
-                horizontalArrangement = Arrangement.Center,
+            )
+            CorChart(
+                isCurrentDate = isCurrentDate,
+                hourlyForecast = hourlyForecast,
                 modifier = Modifier.fillMaxSize()
-            ) {
-                hourlyForecast.forEachIndexed { index, it ->
-                    val contentDescriptionText = stringResource(
-                        R.string.description_hourly_chance_of_rain_percentage_fmt,
-                        it.time,
-                        it.chanceOfRainPct.roundToInt()
-                    )
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .weight(1.0f)
-                            .fillMaxHeight()
-                            .semantics(mergeDescendants = true) { this.contentDescription = contentDescriptionText }
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.BottomCenter,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Canvas(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .width(1.dp)
-                            ) {
-                                drawLine(
-                                    color = gray200,
-                                    Offset(0.0f, 0.0f),
-                                    Offset(0.0f, size.height - 1),
-                                    pathEffect = dashPathEffect(floatArrayOf(10.0f, 10.0f), 0.0f)
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .width(20.dp)
-                                    .fillMaxHeight(1.0f - (it.chanceOfRainPct / 100.0f).coerceAtMost(1.0f))
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(if (index == 0) amber200 else gray200)
-                            )
-                        }
-                    }
-                }
-            }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CorRainyAxisLabels(
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier.clearAndSetSemantics { }
+    ) {
+        Box(
+            contentAlignment = Alignment.TopStart,
+            modifier = Modifier.weight(1.0f)
+        ) {
+            Text(
+                maxLines = 2,
+                text = "sunny",
+                style = MaterialTheme.typography.caption
+            )
+        }
+        Box(
+            contentAlignment = Alignment.TopStart,
+            modifier = Modifier.weight(1.0f)
+        ) {
+            Text(
+                maxLines = 2,
+                text = "rainy",
+                style = MaterialTheme.typography.caption
+            )
+        }
+        Box(
+            contentAlignment = Alignment.TopStart,
+            modifier = Modifier.weight(1.0f)
+        ) {
+            Text(
+                maxLines = 2,
+                text = "heavy rain",
+                style = MaterialTheme.typography.caption
+            )
         }
         Spacer(modifier = Modifier.size(8.dp))
-        Row {
-            Spacer(modifier = Modifier.size(48.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center,
+        Text(
+            maxLines = 1,
+            text = "99AM",
+            style = MaterialTheme.typography.body2,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .alpha(0.0f)
+                .clearAndSetSemantics { }
+        )
+    }
+}
+
+@Composable
+private fun CorChart(
+    isCurrentDate: Boolean,
+    hourlyForecast: List<HourlyForecastInfo>,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = if (hourlyForecast.size > 2) Arrangement.SpaceEvenly else Arrangement.Start,
+        modifier = modifier.horizontalScroll(rememberScrollState())
+    ) {
+        hourlyForecast.forEachIndexed { index, it ->
+            val contentDescriptionText = stringResource(
+                R.string.description_hourly_chance_of_rain_percentage_fmt,
+                it.time,
+                it.chanceOfRainPct.roundToInt()
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clearAndSetSemantics { }
+                    .apply {
+                        if (hourlyForecast.size > 2) this.weight(1.0f)
+                    }
+                    .fillMaxHeight()
+                    .padding(horizontal = 6.dp)
+                    .semantics(mergeDescendants = true) { this.contentDescription = contentDescriptionText }
             ) {
-                hourlyForecast.forEach {
-                    Text(
-                        maxLines = 1,
-                        text = it.time,
-                        style = MaterialTheme.typography.body2,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(1.0f)
+                Box(
+                    contentAlignment = Alignment.BottomCenter,
+                    modifier = Modifier.weight(1.0f)
+                ) {
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(1.dp)
+                    ) {
+                        drawLine(
+                            color = gray200,
+                            Offset(0.0f, 0.0f),
+                            Offset(0.0f, size.height - 1),
+                            pathEffect = dashPathEffect(floatArrayOf(10.0f, 10.0f), 0.0f)
+                        )
+                    }
+                    val animatedMaxHeightFraction by animateFloatAsState(
+                        targetValue = 1.0f - (it.chanceOfRainPct / 100.0f).coerceAtMost(1.0f),
+                        animationSpec = tween(durationMillis = 1000, delayMillis = 120)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(20.dp)
+                            .defaultMinSize(minHeight = 20.dp)
+                            .fillMaxHeight(animatedMaxHeightFraction)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isCurrentDate && index == 0) amber200 else gray200)
                     )
                 }
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    maxLines = 1,
+                    text = it.time,
+                    style = MaterialTheme.typography.body2,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.clearAndSetSemantics { }
+                )
             }
         }
     }
@@ -830,5 +925,49 @@ private fun LoadingLightPreview() {
 private fun DarkPreview() {
     MyTheme(darkTheme = true) {
         ForecastDashboardPreview()
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun ChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun SingleHourChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly.take(1)
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun DoubleHourChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly.take(2)
+        )
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 640, showBackground = true, backgroundColor = 0xFF5ACBFA)
+@Composable
+private fun TooManyHoursChanceOfRainPreview() {
+    MyTheme {
+        ChanceOfRainPanel(
+            isCurrentDate = true,
+            hourlyForecast = makeSampleDailyForecast(0).hourly + makeSampleDailyForecast(0).hourly
+        )
     }
 }
